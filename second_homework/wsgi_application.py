@@ -37,10 +37,9 @@ class WSGIApplication:
         print (message)
         if message:
             self.start_response('200 OK', self.headers)
-            yield ('%s\n' % message).encode('utf-8')
         else:
             self.start_response('204 NO CONTENT', self.headers)
-            yield ('%s\n' % "Error").encode('utf-8')
+        yield ('%s\n' % message).encode('utf-8')
 
 
 if __name__ == '__main__':
