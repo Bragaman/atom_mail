@@ -1,5 +1,7 @@
 from django.conf.urls import url
-from finance.views import hello_world
+from finance.views import *
+
 urlpatterns = [
-    url(r'.*', hello_world),
+    url(r'^$', home_page),
+    url(r'^charges/$', charges_page)
 ]
