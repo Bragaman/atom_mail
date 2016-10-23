@@ -2,6 +2,8 @@ from django.shortcuts import render
 
 # Create your views here.
 from django.http import HttpResponse
+from finance.forms import *
+
 
 def home_page(request):
     return HttpResponse(
@@ -10,6 +12,7 @@ def home_page(request):
         <a href="/charges/"/>go to your charges page<a/>
         '''
     )
+
 
 def charges_page(request):
     return HttpResponse(
