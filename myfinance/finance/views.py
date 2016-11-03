@@ -2,36 +2,26 @@ from django.shortcuts import render
 
 # Create your views here.
 from django.http import HttpResponse
+from django.views.decorators.http import require_POST
+
 from finance.forms import *
 
 
 def home_page(request):
-    return HttpResponse(
-        '''
-        <h1>Hello, People!</h1>
-        <a href="/charges/"/>go to your charges page<a/>
-        '''
-    )
+    return render(request, 'home_page.html')
 
 
 def charges_page(request):
-    return HttpResponse(
-        '''
-        <a href="/"/>go to home page<a/>
-        <table border="1">
-            <caption>Charges table</caption>
-            <tr>
-                <th>date time</th>
-                <th>sum</th>
-            </tr>
-            <tr>
-                <td>2016-09-09</td>
-                <td>-300</td>
-            </tr>
-            <tr>
-                <td>2016-09-10</td>
-                <td>500</td>
-            </tr>
-        </table>
-        '''
-    )
+    return render(request, 'charges_page.html')
+
+
+# @require_POST
+def add_charge(request):
+    if request.method == "POST":
+        form = ChargeForm(request.POST)  # if no files
+        if form.is_valid():
+            # do something if form is valid
+            return render(request, 'finish_charge.html')
+    else:
+        form = ChargeForm()
+    return render(request, 'add_charge.html', {'form': form})
