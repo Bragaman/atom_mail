@@ -6,22 +6,47 @@
 </head>
 <body>
 <a href="/"/>go to home page<a/>
-<table border="1">
-    <caption>Charges table</caption>
-    <tr>
-        <th>date time</th>
-        <th>sum</th>
-    </tr>
-    <tr>
-        <td>2016-09-09</td>
-        <td>-300</td>
-    </tr>
-    <tr>
-        <td>2016-09-10</td>
-        <td>500</td>
-    </tr>
+<table>
+    <td style="padding:0 15px 0 15px;" valign="top">
+        <table>
+            <caption>Positive charges table</caption>
+            <tr>
+                <th>date time</th>
+                <th>sum</th>
+            </tr>
+            {% for d, v in charges %}
+            {% if v > 0 %}
+            <tr>
+                <td>{{d}}</td>
+                <td>{{v}}</td>
+            </tr>
+            {% endif %}
+            {% empty %}
+            <tr>no charges</tr>
+            {% endfor %}
+        </table>
+    </td>
+    <td style="padding:0 15px 0 15px;" valign="top">
+        <table>
+            <caption>Negative charges table</caption>
+            <tr>
+                <th>date time</th>
+                <th>sum</th>
+            </tr>
+            {% for d, v in charges %}
+            {% if v < 0 %}
+            <tr>
+                <td>{{d}}</td>
+                <td>{{v}}</td>
+            </tr>
+            {% endif %}
+            {% empty %}
+            <tr>no charges</tr>
+            {% endfor %}
+        </table>
+    </td>
 </table>
-<a href="/add_charge/"/>add charge<a/>
 
+<a href="/add_charge/"/>add charge<a/>
 </body>
 </html>
