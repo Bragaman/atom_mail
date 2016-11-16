@@ -14,11 +14,11 @@
                 <th>date time</th>
                 <th>sum</th>
             </tr>
-            {% for charge in charges %}
-            {% if charge.value > 0 %}
+            {% for d, v in charges %}
+            {% if v > 0 %}
             <tr>
-                <td>{{ charge.date }}</td>
-                <td>{{ charge.value }}</td>
+                <td>{{d}}</td>
+                <td>{{v}}</td>
             </tr>
             {% endif %}
             {% empty %}
@@ -28,16 +28,16 @@
     </td>
     <td style="padding:0 15px 0 15px;" valign="top">
         <table>
-            <caption>Positive charges table</caption>
+            <caption>Negative charges table</caption>
             <tr>
                 <th>date time</th>
                 <th>sum</th>
             </tr>
-            {% for charge in charges %}
-            {% if charge.value < 0 %}
+            {% for d, v in charges %}
+            {% if v < 0 %}
             <tr>
-                <td>{{ charge.date }}</td>
-                <td>{{ charge.value }}</td>
+                <td>{{d}}</td>
+                <td>{{v}}</td>
             </tr>
             {% endif %}
             {% empty %}
@@ -48,7 +48,7 @@
 </table>
 <br>
 
+<a href="/add_charge_no_model/"/>add fake charge (old home work)<a/>
 <br>
-<a href="/add_charge/{{ account_id }}"/>add charge on this account<a/>
 </body>
 </html>

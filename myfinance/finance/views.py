@@ -8,10 +8,6 @@ from random import randint
 from finance.forms import *
 
 
-def home_page(request):
-    return render(request, 'home_page.html')
-
-
 def charges_page(request):
     def random_transactions():
         today = date.today()
@@ -28,16 +24,62 @@ def charges_page(request):
 
     gen = random_transactions()
     charges = [c for c in gen]
-    return render(request, 'charges_page.html', {'charges': charges})
+    return render(request, 'charges_fake_page.html', {'charges': charges})
+
+
+def home_page(request):
+    accounts = Account.objects.all()
+    return render(request, 'home_page.html', {'accounts':accounts})
+
+
+def account_charges(request, account_id):
+    charges = Charge.objects.filter(account=account_id)
+    print(len(charges))
+    return render(request, 'charges_page.html', {'charges': charges, 'account_id': account_id})
 
 
 # @require_POST
-def add_charge(request):
+def add_charge_no_model(request):
     if request.method == "POST":
-        form = ChargeForm(request.POST)  # if no files
+        form = ChargeFormNoModel(request.POST)  # if no files
         if form.is_valid():
             # do something if form is valid
             return render(request, 'finish_charge.html')
     else:
+        form = ChargeFormNoModel()
+    return render(request, 'add_from.html', {'form': form, 'path': '/add_charge_no_model/'})
+
+
+def add_charge(request):
+    if request.method == "POST":
+        form = ChargeForm(request.POST)
+        if form.is_valid():
+            new_charge = form.save()
+            new_charge.save()
+            return render(request, 'finish_charge.html')
+    else:
         form = ChargeForm()
-    return render(request, 'add_charge.html', {'form': form})
+    return render(request, 'add_from.html', {'form': form, 'path': '/add_charge/'})
+
+
+def add_account_charge(request, account_id):
+    if request.method == "POST":
+        form = ChargeForm(request.POST, initial={'account': account_id})
+        if form.is_valid():
+            new_charge = form.save()
+            new_charge.save()
+            return render(request, 'finish_charge.html')
+    else:
+        form = ChargeForm(initial={'account': account_id})
+    return render(request, 'add_from.html', {'form': form, 'path': '/add_charge/'})
+
+
+def add_account(request):
+    if request.method == 'POST':
+        form = AccountForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return render(request, 'finish_charge.html')
+    else:
+        form = AccountForm()
+    return render(request, 'add_from.html', {'form': form, 'path': '/add_account/'})

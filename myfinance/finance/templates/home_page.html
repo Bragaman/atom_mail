@@ -5,7 +5,28 @@
     <title>Home page</title>
 </head>
 <body>
-    <h1>Hello, People!</h1>
-    <a href="/charges/"/>go to your charges page<a/>
+<h1>Hello, People!</h1>
+<table>
+    <tr>
+        <th>date time</th>
+        <th>sum</th>
+    </tr>
+    {% for account in accounts %}
+        <tr>
+            <td>{{ account.name }}</td>
+            <td>{{ account.number }}</td>
+            <td><a href="/charges/{{ account.id }}/" />go to this account<a/></td>
+        </tr>
+        {% empty %}
+        <tr>no accounts</tr>
+
+    {% endfor %}
+</table>
+<br>
+<a href="/add_account/"/>add new account<a/>
+<br>
+<a href="/fake_charges/"/>go to fake charges page<a/>
+<br>
+<a href="/add_charge/"/>add charge<a/>
 </body>
 </html>
