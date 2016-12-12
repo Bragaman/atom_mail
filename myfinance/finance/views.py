@@ -11,60 +11,20 @@ from django.contrib.messages import error
 from finance.forms import *
 from django.contrib.auth.decorators import login_required
 
-def charges_page(request):
-    def random_transactions():
-        today = date.today()
-        start_date = today.replace(month=1, day=1).toordinal()
-        end_date = today.toordinal()
-        while True:
-            start_date = randint(start_date, end_date)
-            random_date = date.fromordinal(start_date)
-            if random_date >= today:
-                break
-            random_value = randint(-10000, 10000), randint(0, 99)
-            random_value = Decimal('%d.%d' % random_value)
-            yield random_date, random_value
-
-    gen = random_transactions()
-    charges = [c for c in gen]
-    return render(request, 'charges_fake_page.html', {'charges': charges})
 
 @login_required
 def home_page(request):
-    accounts = Account.objects.all()
+    accounts = Account.objects.filter(user=request.user)
     return render(request, 'home_page.html', {'accounts':accounts})
 
-
+@login_required
 def account_charges(request, account_id):
     charges = Charge.objects.filter(account=account_id)
     print(len(charges))
     return render(request, 'charges_page.html', {'charges': charges, 'account_id': account_id})
 
 
-# @require_POST
-def add_charge_no_model(request):
-    if request.method == "POST":
-        form = ChargeFormNoModel(request.POST)  # if no files
-        if form.is_valid():
-            # do something if form is valid
-            return render(request, 'finish_charge.html')
-    else:
-        form = ChargeFormNoModel()
-    return render(request, 'add_from.html', {'form': form, 'path': '/add_charge_no_model/'})
-
-
-def add_charge(request):
-    if request.method == "POST":
-        form = ChargeForm(request.POST)
-        if form.is_valid():
-            new_charge = form.save()
-            new_charge.save()
-            return render(request, 'finish_charge.html')
-    else:
-        form = ChargeForm()
-    return render(request, 'add_from.html', {'form': form, 'path': '/add_charge/'})
-
-
+@login_required
 def add_account_charge(request, account_id):
     if request.method == "POST":
         form = ChargeForm(request.POST, initial={'account': account_id})
@@ -76,12 +36,15 @@ def add_account_charge(request, account_id):
         form = ChargeForm(initial={'account': account_id})
     return render(request, 'add_from.html', {'form': form, 'path': '/add_charge/'})
 
-
+@login_required
 def add_account(request):
     if request.method == 'POST':
         form = AccountForm(request.POST)
         if form.is_valid():
-            form.save()
+            account = Account.objects.create(user=request.user,
+                                             number=form.cleaned_data['number'],
+                                             name=form.cleaned_data['name'])
+            account.save()
             return render(request, 'finish_charge.html')
     else:
         form = AccountForm()
