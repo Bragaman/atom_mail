@@ -5,8 +5,11 @@ from django.http import HttpResponse
 from datetime import date
 from decimal import Decimal
 from random import randint
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.messages import error
 from finance.forms import *
-
+from django.contrib.auth.decorators import login_required
 
 def charges_page(request):
     def random_transactions():
@@ -26,7 +29,7 @@ def charges_page(request):
     charges = [c for c in gen]
     return render(request, 'charges_fake_page.html', {'charges': charges})
 
-
+@login_required
 def home_page(request):
     accounts = Account.objects.all()
     return render(request, 'home_page.html', {'accounts':accounts})

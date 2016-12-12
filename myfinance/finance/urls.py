@@ -9,4 +9,6 @@ urlpatterns = [
     url(r'^add_charge/$', add_charge, ),
     url(r'^add_charge/(\d+)/$', add_account_charge, ),
     url(r'^add_account/$', add_account, ),
+    url(r'^login/$', login),
+    url(r'logout/$', logout),
 ]

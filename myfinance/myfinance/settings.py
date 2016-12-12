@@ -53,7 +53,7 @@ ROOT_URLCONF = 'myfinance.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['./templates',],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -75,7 +75,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'atom_mail_dev',
-        'USER': 'developer',
+        'USER': 'postgres',
         'PASSWORD': '12345',
         'HOST': '',  # Set to empty string for localhost.
         'PORT': '',  # Set to empty string for default.
@@ -117,3 +117,4 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
+LOGIN_REDIRECT_URL = '/'
