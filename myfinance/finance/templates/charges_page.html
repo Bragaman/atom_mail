@@ -1,11 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>My charges</title>
-</head>
-<body>
-<a href="/"/>go to home page<a/>
+{% extends 'base_generic.html' %}
+{% block sidebar %}
+    <br>
+    <li><a href="/">Home page</a></li>
+    <li><a href="/add_charge/{{ account_id }}">Add charge</a></li>
+{% endblock %}
+
+{% block content %}
 <table>
     <td style="padding:0 15px 0 15px;" valign="top">
         <table>
@@ -46,9 +46,7 @@
         </table>
     </td>
 </table>
-<br>
+{% endblock %}
 
-<br>
-<a href="/add_charge/{{ account_id }}"/>add charge on this account<a/>
-</body>
-</html>
+
+

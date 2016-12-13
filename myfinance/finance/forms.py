@@ -26,7 +26,7 @@ class ChargeFormNoModel(forms.Form):
 class ChargeForm(ModelForm):
     class Meta:
         model = Charge
-        fields = ['account', 'value', 'date']
+        fields = ['value', 'date']
 
     def clean(self):
         cleaned_data = super().clean()

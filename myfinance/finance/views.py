@@ -1,3 +1,4 @@
+from django.http import HttpResponseNotFound
 from django.shortcuts import render, redirect
 from rest_framework import views as rest_views
 from rest_framework import viewsets
@@ -17,22 +18,32 @@ def home_page(request):
 @login_required
 def account_charges(request, account_id):
     # TODO check user
-    charges = Charge.objects.filter(account=account_id)
-    print(len(charges))
-    return render(request, 'charges_page.html', {'charges': charges, 'account_id': account_id})
+    account = Account.objects.filter(id=account_id, user=request.user)
+    if account:
+        charges = Charge.objects.filter(account=account_id)
+        return render(request, 'charges_page.html', {'charges': charges, 'account_id': account_id})
+    else:
+        return render(request, 'no_page.html', status=404)
 
 
 @login_required
 def add_account_charge(request, account_id):
-    if request.method == "POST":
-        form = ChargeForm(request.POST, initial={'account': account_id})
-        if form.is_valid():
-            new_charge = form.save()
-            new_charge.save()
-            return render(request, 'finish_charge.html')
+    account = Account.objects.filter(id=account_id, user=request.user)
+    if account:
+        if request.method == "POST":
+            form = ChargeForm(request.POST)
+            if form.is_valid():
+                new_charge = Charge.objects.create(account=account,
+                                                   **form.cleaned_data)
+                new_charge.save()
+                return render(request, 'finish_charge.html')
+        else:
+            form = ChargeForm()
+        return render(request, 'add_from.html', {'form': form,
+                                                 'path': '/add_charge/{}/'.format(account_id)
+                                                 })
     else:
-        form = ChargeForm(initial={'account': account_id})
-    return render(request, 'add_from.html', {'form': form, 'path': '/add_charge/'})
+        return render(request, 'no_page.html', status=404)
 
 
 @login_required
@@ -81,12 +92,23 @@ class ChargeViewSet(viewsets.ModelViewSet):
     serializer_class = ChargeSerializer
 
 
+# @login_required
 class MonthStatCollection(rest_views.APIView):
-    DUMMY_VALUES = [
-        {'month': 'december', 'amount': -1000.90},
-        {'month': 'november', 'amount': 530.00},
-    ]
 
     def get(self, request, format=None):
-        serializer = MonthStatSerializer(self.DUMMY_VALUES, many=True)
+        values = dict()
+        counts = dict()
+        for account in Account.objects.filter(user=request.user):
+            for charge in Charge.objects.filter(account=account):
+                m = charge.date.strftime('%B%Y')
+                if m in values:
+                    values[m] += charge.value
+                    counts[m] += 1
+                else:
+                    values[m] = charge.value
+                    counts[m] = 0
+        stats = list()
+        for i, v in values.items():
+            stats.append({'month': i, 'amount': v})
+        serializer = MonthStatSerializer(stats, many=True)
         return Response(serializer.data)
