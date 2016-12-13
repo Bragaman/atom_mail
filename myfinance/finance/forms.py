@@ -44,4 +44,13 @@ class AccountForm(ModelForm):
         fields = ['name', 'number']
 
 
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ('username', 'password', 'first_name', 'last_name', 'email')
 
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ('address', 'phone_number',)

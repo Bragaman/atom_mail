@@ -1,3 +1,5 @@
+from django.core.checks import messages
+from django.db import transaction
 from django.shortcuts import render
 
 # Create your views here.
@@ -17,8 +19,10 @@ def home_page(request):
     accounts = Account.objects.filter(user=request.user)
     return render(request, 'home_page.html', {'accounts':accounts})
 
+
 @login_required
 def account_charges(request, account_id):
+    # TODO check user
     charges = Charge.objects.filter(account=account_id)
     print(len(charges))
     return render(request, 'charges_page.html', {'charges': charges, 'account_id': account_id})
@@ -36,6 +40,7 @@ def add_account_charge(request, account_id):
         form = ChargeForm(initial={'account': account_id})
     return render(request, 'add_from.html', {'form': form, 'path': '/add_charge/'})
 
+
 @login_required
 def add_account(request):
     if request.method == 'POST':
@@ -49,3 +54,23 @@ def add_account(request):
     else:
         form = AccountForm()
     return render(request, 'add_from.html', {'form': form, 'path': '/add_account/'})
+
+
+def register_user(request):
+    if request.method == 'POST':
+        user_form = UserForm(request.POST)
+        profile_form = UserProfileForm(request.POST)
+        if user_form.is_valid() and profile_form.is_valid():
+            user = User.objects.create_user(**user_form.cleaned_data)
+            profile_cleaned = profile_form.cleaned_data
+            user.profile.phone_number = profile_cleaned['phone_number']
+            user.profile.address = profile_cleaned['address']
+            user.save()
+            return redirect('/')
+    else:
+        user_form = UserForm()
+        profile_form = UserProfileForm()
+    return render(request, 'profile_form.html', {
+        'user_form': user_form,
+        'profile_form': profile_form
+    })
