@@ -33,7 +33,7 @@ def add_account_charge(request, account_id):
         if request.method == "POST":
             form = ChargeForm(request.POST)
             if form.is_valid():
-                new_charge = Charge.objects.create(account=account,
+                new_charge = Charge.objects.create(account_id=account_id,
                                                    **form.cleaned_data)
                 new_charge.save()
                 return render(request, 'finish_charge.html')
@@ -97,16 +97,14 @@ class MonthStatCollection(rest_views.APIView):
 
     def get(self, request, format=None):
         values = dict()
-        counts = dict()
         for account in Account.objects.filter(user=request.user):
             for charge in Charge.objects.filter(account=account):
                 m = charge.date.strftime('%B%Y')
                 if m in values:
                     values[m] += charge.value
-                    counts[m] += 1
                 else:
                     values[m] = charge.value
-                    counts[m] = 0
+
         stats = list()
         for i, v in values.items():
             stats.append({'month': i, 'amount': v})
