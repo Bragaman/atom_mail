@@ -1,17 +1,11 @@
-from django.core.checks import messages
-from django.db import transaction
-from django.shortcuts import render
-
-# Create your views here.
-from django.http import HttpResponse
-from datetime import date
-from decimal import Decimal
-from random import randint
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.messages import error
+from rest_framework import views as rest_views
+from rest_framework import viewsets
+from rest_framework.response import Response
+
 from finance.forms import *
 from django.contrib.auth.decorators import login_required
+from finance.serializers import *
 
 
 @login_required
@@ -74,3 +68,25 @@ def register_user(request):
         'user_form': user_form,
         'profile_form': profile_form
     })
+
+
+# API
+class AccountViewSet(viewsets.ModelViewSet):
+    queryset = Account.objects.all()
+    serializer_class = AccountSerializer
+
+
+class ChargeViewSet(viewsets.ModelViewSet):
+    queryset = Charge.objects.all()
+    serializer_class = ChargeSerializer
+
+
+class MonthStatCollection(rest_views.APIView):
+    DUMMY_VALUES = [
+        {'month': 'december', 'amount': -1000.90},
+        {'month': 'november', 'amount': 530.00},
+    ]
+
+    def get(self, request, format=None):
+        serializer = MonthStatSerializer(self.DUMMY_VALUES, many=True)
+        return Response(serializer.data)
