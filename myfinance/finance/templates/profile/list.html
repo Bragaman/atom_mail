@@ -1,0 +1,21 @@
+{% extends "base_generic.html" %}
+
+{% block sidebar %}
+    <br>
+    <p><a href="{% url 'user_create' %}">add new user</a></p>
+    <br>
+{% endblock %}
+
+{% block content %}
+    {% for account in object_list %}
+        <p> 
+            {{ account.username }}
+            {{ account.profile.phone_number }}
+            {{ account.profile.address }}
+            <a href="{% url 'user_detail' account.pk %}">detail</a>
+            <a href="{% url 'user_update' account.pk %}">update</a>
+            <a href="{% url 'user_delete' account.pk %}">remove</a>
+        </p>
+    {% endfor %}
+
+{% endblock %}

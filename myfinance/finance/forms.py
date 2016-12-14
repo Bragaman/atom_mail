@@ -1,6 +1,7 @@
 import datetime
 
 from django import forms
+from django.contrib.auth.forms import UserCreationForm
 from django.forms.models import ModelForm
 from finance.models import *
 
@@ -44,13 +45,57 @@ class AccountForm(ModelForm):
         fields = ['name', 'number']
 
 
-class UserForm(forms.ModelForm):
+class ProfileCreateForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+
+    phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$',
+                                 message="Phone number must be entered in the format:"
+                                         " '+999999999'. Up to 15 digits allowed."
+                                 )
+    phone_number = forms.CharField(max_length=16,
+                                   validators=[phone_regex,])
+
+    address = forms.CharField(max_length=500,
+                              widget=forms.Textarea)
+
     class Meta:
         model = User
-        fields = ('username', 'password', 'first_name', 'last_name', 'email')
+        fields = ("username", "email", "password1", "password2")
+
+    def save(self):
+        user = super(ProfileCreateForm, self).save()
+        user.email = self.cleaned_data["email"]
+        user.profile.phone_number = self.cleaned_data["phone_number"]
+        user.profile.address = self.cleaned_data["address"]
+        user.save()
+        return user
+
+
+class ProfileUpdateForm(forms.ModelForm):
+    phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$',
+                                 message="Phone number must be entered in the format:"
+                                         " '+999999999'. Up to 15 digits allowed."
+                                 )
+    phone_number = forms.CharField(max_length=16,
+                                   validators=[phone_regex, ])
+
+    address = forms.CharField(max_length=500,
+                              widget=forms.Textarea)
+
+    class Meta:
+        model = User
+        fields = ("username", "email")
+
+    def save(self):
+        user = super(ProfileCreateForm, self).save()
+        user.profile.phone_number = self.cleaned_data["phone_number"]
+        user.profile.address = self.cleaned_data["address"]
+        user.save()
+        return user
 
 
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ('address', 'phone_number',)
+

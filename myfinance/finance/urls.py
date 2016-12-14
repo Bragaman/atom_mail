@@ -26,6 +26,14 @@ urlpatterns = [
     url(r'^accounts/(?P<account_id>\d+)/charge/(?P<pk>\d+)/edit/$', ChargeUpdate.as_view(), name='charge_update'),
     url(r'^accounts/(?P<account_id>\d+)/charge/(?P<pk>\d+)/delete/$', ChargeDelete.as_view(), name='charge_delete'),
 
+
+    url(r'users/$', UserProfileList.as_view(), name='user_list'),
+    url(r'users/(?P<pk>\d+)/$', UserProfileDetail.as_view(), name='user_detail'),
+    url(r'users/(?P<pk>\d+)/edit/$', UserProfileUpdate.as_view(), name='user_update'),
+    url(r'users/(?P<pk>\d+)/delete/$', UserProfileDelete.as_view(), name='user_delete'),
+    url(r'users/create/$', UserProfileCreate.as_view(), name='user_create'),
+
+
     url(r'^api/', include(router.urls, namespace='api')),
     url(r'^api/stats/', views.MonthStatCollection.as_view())
 ]

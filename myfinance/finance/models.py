@@ -17,7 +17,7 @@ class UserProfile(models.Model):
                                  )
     phone_number = models.CharField(validators=[phone_regex], blank=True, max_length=16)
     address = models.TextField(max_length=500, blank=True)
-    user = models.OneToOneField(User, related_name='profile')
+    user = models.OneToOneField(User, related_name='profile', on_delete=models.CASCADE)
 
 
 @receiver(post_save, sender=User)

@@ -1,5 +1,12 @@
 {% extends "base_generic.html" %}
 
+{% block sidebar %}
+    <br>
+    <li><a href="/">Home page</a></li>
+    <li><a href="{% url 'accounts_list' %}">Back to accounts</a></li>
+    <br>
+{% endblock %}
+
 {% block content %}
     {% if object %}
         <h2>Edit charge by date {{ object.date }}</h2>

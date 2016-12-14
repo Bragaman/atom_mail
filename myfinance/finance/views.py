@@ -1,3 +1,4 @@
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from rest_framework import views as rest_views
@@ -13,6 +14,55 @@ from django.contrib.auth.decorators import login_required
 from finance.serializers import *
 
 
+
+# @login_required
+# def user_profile_create(request, *args, **kwargs):
+#     if request.method == 'POST':
+#         profile_form = UserProfileForm(request.POST)
+#         form = UserCreationForm(request.POST)
+#         if form.is_valid() and profile_form.is_valid():
+#             user = form.save()
+#             # user = User.objects.create(**form.cleaned_data)
+#             profile_cleaned = profile_form.cleaned_data
+#             user.profile.phone_number = profile_cleaned['phone_number']
+#             user.profile.address = profile_cleaned['address']
+#             user.save()
+#             return redirect(reverse_lazy('user_list'))
+#     else:
+#         form = UserCreationForm()
+#         profile_form = UserProfileForm()
+#     return render(request, 'profile_form.html', {
+#         'user_form': form,
+#         'profile_form': profile_form
+#     })
+#
+#
+# @login_required
+# def user_profile_update(request, pk):
+#     user_queryset = User.objects.filter(id=pk)
+#     if user_queryset:
+#         # TODO add permitions
+#         user_instance = user_queryset[0]
+#         if request.method == 'POST':
+#             profile_form = UserProfileForm(request.POST, instance=user_instance.profile)
+#             form = UserCreationForm(request.POST, instance=user_instance)
+#             if form.is_valid() and profile_form.is_valid():
+#                 user = form.save(commit=False)
+#                 profile_cleaned = profile_form.cleaned_data
+#                 user.profile.phone_number = profile_cleaned['phone_number']
+#                 user.profile.address = profile_cleaned['address']
+#                 user.save()
+#                 return redirect(reverse_lazy('user_list'))
+#         else:
+#             form = UserCreationForm(instance=user_instance.profile)
+#             profile_form = UserProfileForm(instance=user_instance)
+#         return render(request, 'profile_form.html', {
+#             'user_form': form,
+#             'profile_form': profile_form
+#         })
+#     return render(request, 'no_page.html')
+
+
 @login_required
 def home_page(request):
     return render(request, 'home_page.html')
@@ -20,20 +70,21 @@ def home_page(request):
 
 def register_user(request):
     if request.method == 'POST':
-        user_form = UserForm(request.POST)
         profile_form = UserProfileForm(request.POST)
-        if user_form.is_valid() and profile_form.is_valid():
-            user = User.objects.create_user(**user_form.cleaned_data)
+        form = UserCreationForm(request.POST)
+        if form.is_valid() and profile_form.is_valid():
+            user = form.save()
+            # user = User.objects.create(**form.cleaned_data)
             profile_cleaned = profile_form.cleaned_data
             user.profile.phone_number = profile_cleaned['phone_number']
             user.profile.address = profile_cleaned['address']
             user.save()
             return redirect('/')
     else:
-        user_form = UserForm()
+        form = UserCreationForm()
         profile_form = UserProfileForm()
     return render(request, 'profile_form.html', {
-        'user_form': user_form,
+        'user_form': form,
         'profile_form': profile_form
     })
 
@@ -124,7 +175,51 @@ class ChargeDelete(LoginRequiredMixin, DeleteView):
     success_url = '/'
 
 
-# API
+# User profile
+class UserProfileList(LoginRequiredMixin, ListView):
+    template_name = 'profile/list.html'
+    model = User
+
+
+class UserProfileDetail(LoginRequiredMixin, DetailView):
+    model = User
+    template_name = 'profile/detail.html'
+
+
+class UserProfileCreate(LoginRequiredMixin, CreateView):
+    model = User
+    form_class = ProfileCreateForm
+    template_name = 'profile/form.html'
+
+    def form_valid(self, form):
+        form.save()
+        return redirect(reverse_lazy('accounts_list'))
+
+
+class UserProfileUpdate(LoginRequiredMixin, UpdateView):
+    model = User
+    form_class = ProfileUpdateForm
+    template_name = 'profile/form.html'
+    success_url = '/'
+
+    def get_object(self, queryset=None):
+        user = super(UserProfileUpdate, self).get_object(queryset)
+        profile = UserProfile.objects.get_or_create(user=user)
+        user.profile = profile[0]
+        return user
+
+    def form_valid(self, form):
+        form.save()
+        return redirect(self.get_success_url())
+
+
+class UserProfileDelete(LoginRequiredMixin, DeleteView):
+    model = User
+    template_name = 'account/delete.html'
+    success_url = '/'
+
+
+# ------------------------------------------------------API-----------------------------------------------------
 class AccountViewSet(viewsets.ModelViewSet):
     queryset = Account.objects.all()
     serializer_class = AccountSerializer

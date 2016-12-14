@@ -116,6 +116,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# AUTH_PROFILE_MODULE = "finanace.userprofile"
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
 

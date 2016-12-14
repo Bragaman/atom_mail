@@ -1,14 +1,8 @@
 {% extends "base_generic.html" %}
 
-{% block sidebar %}
-    <br>
-    <li><a href="/">Home page</a></li>
-    <a href="{% url 'accounts_list' %}">Back to accounts</a>
-{% endblock %}
-
 {% block content %}
     {% if object %}
-        <h2>Edit account {{ object.name }}</h2>
+        <h2>Edit user {{ object.username }}</h2>
     {% else %}
         <h2>Create new account</h2>
     {% endif %}
