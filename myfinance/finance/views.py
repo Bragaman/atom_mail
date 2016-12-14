@@ -18,52 +18,6 @@ def home_page(request):
     return render(request, 'home_page.html')
 
 
-@login_required
-def account_charges(request, account_id):
-    # TODO check user
-    account = Account.objects.filter(id=account_id, user=request.user)
-    if account:
-        charges = Charge.objects.filter(account=account_id)
-        return render(request, 'charges_page.html', {'charges': charges, 'account_id': account_id})
-    else:
-        return render(request, 'no_page.html', status=404)
-
-
-@login_required
-def add_account_charge(request, account_id):
-    account = Account.objects.filter(id=account_id, user=request.user)
-    if account:
-        if request.method == "POST":
-            form = ChargeForm(request.POST)
-            if form.is_valid():
-                new_charge = Charge.objects.create(account_id=account_id,
-                                                   **form.cleaned_data)
-                new_charge.save()
-                return render(request, 'finish_charge.html')
-        else:
-            form = ChargeForm()
-        return render(request, 'add_from.html', {'form': form,
-                                                 'path': '/add_charge/{}/'.format(account_id)
-                                                 })
-    else:
-        return render(request, 'no_page.html', status=404)
-
-
-@login_required
-def add_account(request):
-    if request.method == 'POST':
-        form = AccountForm(request.POST)
-        if form.is_valid():
-            account = Account.objects.create(user=request.user,
-                                             number=form.cleaned_data['number'],
-                                             name=form.cleaned_data['name'])
-            account.save()
-            return render(request, 'finish_charge.html')
-    else:
-        form = AccountForm()
-    return render(request, 'add_from.html', {'form': form, 'path': '/add_account/'})
-
-
 def register_user(request):
     if request.method == 'POST':
         user_form = UserForm(request.POST)
@@ -132,7 +86,7 @@ class AccountDelete(LoginRequiredMixin, DeleteView):
 # Charges
 class ChargeCreate(LoginRequiredMixin, CreateView):
     model = Charge
-    fields = ['value', 'date']
+    form_class = ChargeForm
     template_name = 'charge/form.html'
 
     def form_valid(self, form):
