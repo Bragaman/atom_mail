@@ -8,6 +8,7 @@ from finance.views import *
 router = routers.DefaultRouter()
 router.register(r'accounts/?', views.AccountViewSet)
 router.register(r'charges/?', views.ChargeViewSet)
+router.register(r'users/?', views.UserProfileViewSet)
 
 urlpatterns = [
     url(r'^$', home_page),
@@ -27,11 +28,11 @@ urlpatterns = [
     url(r'^accounts/(?P<account_id>\d+)/charge/(?P<pk>\d+)/delete/$', ChargeDelete.as_view(), name='charge_delete'),
 
 
-    url(r'users/$', UserProfileList.as_view(), name='user_list'),
-    url(r'users/(?P<pk>\d+)/$', UserProfileDetail.as_view(), name='user_detail'),
-    url(r'users/(?P<pk>\d+)/edit/$', UserProfileUpdate.as_view(), name='user_update'),
-    url(r'users/(?P<pk>\d+)/delete/$', UserProfileDelete.as_view(), name='user_delete'),
-    url(r'users/create/$', UserProfileCreate.as_view(), name='user_create'),
+    url(r'^users/$', UserProfileList.as_view(), name='user_list'),
+    url(r'^users/(?P<pk>\d+)/$', UserProfileDetail.as_view(), name='user_detail'),
+    url(r'^users/(?P<pk>\d+)/edit/$', UserProfileUpdate.as_view(), name='user_update'),
+    url(r'^users/(?P<pk>\d+)/delete/$', UserProfileDelete.as_view(), name='user_delete'),
+    url(r'^users/create/$', UserProfileCreate.as_view(), name='user_create'),
 
 
     url(r'^api/', include(router.urls, namespace='api')),

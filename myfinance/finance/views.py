@@ -202,12 +202,6 @@ class UserProfileUpdate(LoginRequiredMixin, UpdateView):
     template_name = 'profile/form.html'
     success_url = '/'
 
-    def get_object(self, queryset=None):
-        user = super(UserProfileUpdate, self).get_object(queryset)
-        profile = UserProfile.objects.get_or_create(user=user)
-        user.profile = profile[0]
-        return user
-
     def form_valid(self, form):
         form.save()
         return redirect(self.get_success_url())
@@ -230,7 +224,12 @@ class ChargeViewSet(viewsets.ModelViewSet):
     serializer_class = ChargeSerializer
 
 
-class MonthStatCollection(rest_views.APIView):
+class UserProfileViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class MonthStatCollection(LoginRequiredMixin, rest_views.APIView):
     def get(self, request, format=None):
         values = dict()
         for account in Account.objects.filter(user=request.user):

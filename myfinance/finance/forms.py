@@ -87,7 +87,7 @@ class ProfileUpdateForm(forms.ModelForm):
         fields = ("username", "email")
 
     def save(self):
-        user = super(ProfileCreateForm, self).save()
+        user = super(ProfileUpdateForm, self).save()
         user.profile.phone_number = self.cleaned_data["phone_number"]
         user.profile.address = self.cleaned_data["address"]
         user.save()
