@@ -2,30 +2,18 @@
 
 {% block sidebar %}
     <br>
-    <p><a href="/add_account/">add new account</a></p>
+    {% if user.is_authenticated %}
+        <li><a href="{% url 'accounts_list' %}">Go to accounts</a></li>
+    {% endif %}
     <br>
 {% endblock %}
 
 {% block content %}
-    <h1>Hello, People!</h1>
-    <div>
-    <table>
-        <tr>
-            <th>date time</th>
-            <th>sum</th>
-        </tr>
-        {% for account in accounts %}
-            <tr>
-                <td>{{ account.name }}</td>
-                <td>{{ account.number }}</td>
-                <td><a href="/charges/{{ account.id }}/">go to this account</a></td>
-            </tr>
-        {% empty %}
-            <tr>no accounts</tr>
+    <h1>About project!</h1>
+    <p>
+        It,s is my atom mail course project.
+    </p>
 
-        {% endfor %}
-    </table>
-    </div>
-{#    </table>#}
+    {#    </table>#}
 {% endblock %}
 

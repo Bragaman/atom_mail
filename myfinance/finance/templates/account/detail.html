@@ -1,0 +1,51 @@
+{% extends 'base_generic.html' %}
+{% block sidebar %}
+    <br>
+    <li><a href="/">Home page</a></li>
+    <a href="{% url 'charge_create' account_id=object.pk  %}">Add charge</a>
+{% endblock %}
+
+{% block content %}
+<table>
+    <td style="padding:0 15px 0 15px;" valign="top">
+        <table>
+            <caption>Positive charges table</caption>
+            <tr>
+                <th>date time</th>
+                <th>sum</th>
+            </tr>
+            {% for charge in object.charges.all %}
+            {% if charge.value > 0 %}
+            <tr>
+                <td>{{ charge.date }}</td>
+                <td>{{ charge.value }}</td>
+                <a href="{% url 'charge_update' account_id=object.pk pk=charge.pk %}">update</a>
+                <a href="{% url 'charge_delete' account_id=object.pk pk=charge.pk %}">remove</a>
+            </tr>
+            {% endif %}
+            {% empty %}
+            <tr>no charges</tr>
+            {% endfor %}
+        </table>
+    </td>
+    <td style="padding:0 15px 0 15px;" valign="top">
+        <table>
+            <caption>Positive charges table</caption>
+            <tr>
+                <th>date time</th>
+                <th>sum</th>
+            </tr>
+            {% for charge in object.charges.all %}
+            {% if charge.value < 0 %}
+            <tr>
+                <td>{{ charge.date }}</td>
+                <td>{{ charge.value }}</td>
+            </tr>
+            {% endif %}
+            {% empty %}
+            <tr>no charges</tr>
+            {% endfor %}
+        </table>
+    </td>
+</table>
+{% endblock %}

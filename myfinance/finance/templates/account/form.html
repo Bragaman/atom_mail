@@ -1,0 +1,14 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+    {% if object %}
+        <h2>Edit account {{ object.name }}</h2>
+    {% else %}
+        <h2>Create new account</h2>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" />
+    </form>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base_generic.html" %}
+
+{% block sidebar %}
+    <br>
+    <p><a href="{% url 'accounts_create' %}">add new account</a></p>
+    <br>
+{% endblock %}
+
+{% block content %}
+    <h2>Remove account {{ object.name }}?</h2>
+<form action="" method="post">
+    {% csrf_token %}
+    <button>Удалить</button>
+</form>
+
+{% endblock %}
