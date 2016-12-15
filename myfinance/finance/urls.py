@@ -11,7 +11,7 @@ router.register(r'charges/?', views.ChargeViewSet)
 router.register(r'users/?', views.UserProfileViewSet)
 
 urlpatterns = [
-    url(r'^$', home_page),
+    url(r'^$', home_page, name='home_page'),
     # url(r'^charges/(\d+)/$', account_charges),
     # url(r'^add_charge/(\d+)/$', add_account_charge, ),
     # url(r'^add_account/$', add_account, ),
@@ -19,6 +19,8 @@ urlpatterns = [
 
     url(r'^accounts/$', AccountList.as_view(), name='accounts_list'),
     url(r'^accounts/(?P<pk>\d+)/$', AccountDetail.as_view(), name='accounts_detail'),
+    url(r'^accounts/(?P<pk>\d+)/statistic/$', account_stats, name='accounts_statistic'),
+    url(r'^accounts/(?P<pk>\d+)/report/$', account_report, name='accounts_report'),
     url(r'^accounts/(?P<pk>\d+)/edit/$', AccountUpdate.as_view(), name='accounts_update'),
     url(r'^accounts/(?P<pk>\d+)/delete/$', AccountDelete.as_view(), name='accounts_delete'),
     url(r'^accounts/create/$', AccountCreate.as_view(), name='accounts_create'),

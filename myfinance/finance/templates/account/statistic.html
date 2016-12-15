@@ -1,0 +1,20 @@
+{% extends "base_generic.html" %}
+
+{% block sidebar %}
+    <br>
+    <p><a href="{% url 'accounts_report' pk %}">Download report</a></p>
+    <br>
+{% endblock %}
+
+{% block content %}
+    <h2>Account statistic</h2>
+    {% for v in stats %}
+        <li>
+            {% for key, value in v.items  %}
+                {{ key }}: {{ value }};
+            {% endfor %}
+        </li>
+
+    {% endfor %}
+
+{% endblock %}

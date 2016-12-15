@@ -39,6 +39,20 @@ class Account(models.Model):
     def __str__(self):
         return self.name
 
+    def get_account_stats(self):
+        values = dict()
+        for charge in self.charges.all():
+            m = charge.date.strftime('%B %Y')
+            if m in values:
+                values[m] += charge.value
+            else:
+                values[m] = charge.value
+
+        stats = list()
+        for i, v in values.items():
+            stats.append({'month': i, 'amount': v})
+        return stats
+
 
 class Charge(models.Model):
     account = models.ForeignKey(Account, related_name='charges', on_delete=models.CASCADE)

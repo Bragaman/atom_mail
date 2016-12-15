@@ -1,6 +1,5 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
-from finance.mixins import SuperUserRequiredMixin
 from django.http import HttpResponseNotAllowed
 from django.http import HttpResponseNotFound
 from django.shortcuts import render, redirect
@@ -8,14 +7,18 @@ from rest_framework import views as rest_views
 from rest_framework import viewsets
 from rest_framework.response import Response
 
+import csv
+from django.http import HttpResponse
+
 from django.views.generic import ListView, DetailView
 from django.views.generic import CreateView, UpdateView, DeleteView
 from django.core.urlresolvers import reverse_lazy
-
-from finance.forms import *
 from django.contrib.auth.decorators import login_required
+
 from finance.serializers import *
-from django.core.exceptions import PermissionDenied
+from finance.forms import *
+from finance.mixins import SuperUserRequiredMixin
+from finance.utils import *
 
 
 # @login_required
@@ -72,9 +75,6 @@ class AccountCreate(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         instance = form.save(commit=False)
-        # user = self.request.user
-        # if not user.is_superuser and instance.user != user:
-        #     raise PermissionDenied()
         instance.user = self.request.user
         instance.save()
         # TODO ask why so
@@ -109,6 +109,39 @@ class AccountDelete(LoginRequiredMixin, DeleteView):
         if not user.is_superuser and obj.user != user:
             raise PermissionDenied()
         return obj
+
+
+@login_required
+def account_stats(request, *args, **kwargs):
+    pk = kwargs.get("pk")
+    account_queryset = Account.objects.filter(id=pk)
+    if account_queryset:
+        account = check_account_owner(account_queryset, request)
+        stats = account.get_account_stats()
+        return render(request,
+                      'account/statistic.html',
+                      {'stats': stats,
+                       'pk': pk}
+                      )
+    return HttpResponseNotFound()
+
+
+@login_required
+def account_report(request, *args, **kwargs):
+    account_queryset = Account.objects.filter(id=kwargs.get("pk"))
+    if account_queryset:
+        account = check_account_owner(account_queryset, request)
+        stats = account.get_account_stats()
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="report.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Date', 'Amount'])
+        for i in stats:
+            writer.writerow([i['month'], i['amount']])
+
+        return response
+    return HttpResponseNotFound()
 
 
 # Charges
@@ -212,11 +245,11 @@ class UserProfileDelete(SuperUserRequiredMixin, DeleteView):
 
 
 # ------------------------------------------------------API-----------------------------------------------------
-class AccountViewSet(viewsets.ModelViewSet):
+class AccountViewSet(LoginRequiredMixin, viewsets.ModelViewSet):
     queryset = Account.objects.all()
     serializer_class = AccountSerializer
 
-    def get_queryset_by_username(self):
+    def get_queryset_by_username(self, request):
         if "username" in self.request.query_params:
             username = self.request.query_params.get("username", None)
             user_queryset = User.objects.filter(username=username)
@@ -225,21 +258,21 @@ class AccountViewSet(viewsets.ModelViewSet):
             else:
                 return False
         else:
-            self.queryset = Account.objects.filter(user=self.request.user.id)
+            self.queryset = Account.objects.filter(user=request.user.id)
         return True
 
     def list(self, request, *args, **kwargs):
-        if self.get_queryset_by_username():
+        if self.get_queryset_by_username(request):
             return super().list(request, *args, **kwargs)
         return HttpResponseNotFound('No user with this name')
 
     def create(self, request, *args, **kwargs):
-        if self.get_queryset_by_username():
-            return super().list(request, *args, **kwargs)
+        if self.get_queryset_by_username(request):
+            return super().create(request, *args, **kwargs)
         return HttpResponseNotFound('No user with this name')
 
 
-class ChargeViewSet(viewsets.ModelViewSet):
+class ChargeViewSet(LoginRequiredMixin, viewsets.ModelViewSet):
     queryset = Charge.objects.all()
     serializer_class = ChargeSerializer
 
@@ -247,14 +280,15 @@ class ChargeViewSet(viewsets.ModelViewSet):
         if "account_number" in self.request.query_params:
             account_queryset = Account.objects.filter(number=self.request.query_params.get("account_number", None))
             if account_queryset:
+                check_account_owner(account_queryset, request)
                 self.queryset = Charge.objects.filter(account=account_queryset[0].id)
                 return super().list(request, *args, **kwargs)
             return HttpResponseNotFound('No account with this number')
 
-        return HttpResponseNotAllowed('Only with number account here')
+        return HttpResponseNotFound('Only with number account here')
 
 
-class UserProfileViewSet(viewsets.ModelViewSet):
+class UserProfileViewSet(SuperUserRequiredMixin, viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -273,17 +307,12 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
 class MonthStatCollection(LoginRequiredMixin, rest_views.APIView):
     def get(self, request, format=None):
-        values = dict()
-        for account in Account.objects.filter(user=request.user):
-            for charge in Charge.objects.filter(account=account):
-                m = charge.date.strftime('%B%Y')
-                if m in values:
-                    values[m] += charge.value
-                else:
-                    values[m] = charge.value
-
-        stats = list()
-        for i, v in values.items():
-            stats.append({'month': i, 'amount': v})
-        serializer = MonthStatSerializer(stats, many=True)
-        return Response(serializer.data)
+        if "account_number" in self.request.query_params:
+            account_queryset = Account.objects.filter(number=self.request.query_params.get("account_number", None))
+            if account_queryset:
+                account = check_account_owner(account_queryset, request)
+                stats = account.get_account_stats()
+                serializer = MonthStatSerializer(stats, many=True)
+                return Response(serializer.data)
+            return HttpResponseNotFound("Wrong query arg")
+        return HttpResponseNotFound("Wrong query arg 'account_number' is required")

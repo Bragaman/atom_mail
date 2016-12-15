@@ -1,10 +1,10 @@
 {% extends 'base_generic.html' %}
 {% block sidebar %}
     <br>
-    <li><a href="/">Home page</a></li>
 {% endblock %}
 
 {% block content %}
+    <h2>Accounts list</h2>
     {% for account in object.accounts.all %}
         <p>
             {{ account.name }}

@@ -7,6 +7,7 @@
 {% endblock %}
 
 {% block content %}
+    <h2>Accounts list</h2>
     {% for account in object_list %}
         <p> 
             {{ account.name }}
@@ -14,6 +15,7 @@
             <a href="{% url 'accounts_detail' account.pk %}">detail</a>
             <a href="{% url 'accounts_update' account.pk %}">update</a>
             <a href="{% url 'accounts_delete' account.pk %}">remove</a>
+            <a href="{% url 'accounts_statistic' account.pk %}">stats</a>
         </p>
     {% endfor %}
 
