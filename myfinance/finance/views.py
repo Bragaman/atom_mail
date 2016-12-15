@@ -1,5 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseNotAllowed
+from django.http import HttpResponseNotFound
 from django.shortcuts import render, redirect
 from rest_framework import views as rest_views
 from rest_framework import viewsets
@@ -12,55 +14,6 @@ from django.core.urlresolvers import reverse_lazy
 from finance.forms import *
 from django.contrib.auth.decorators import login_required
 from finance.serializers import *
-
-
-
-# @login_required
-# def user_profile_create(request, *args, **kwargs):
-#     if request.method == 'POST':
-#         profile_form = UserProfileForm(request.POST)
-#         form = UserCreationForm(request.POST)
-#         if form.is_valid() and profile_form.is_valid():
-#             user = form.save()
-#             # user = User.objects.create(**form.cleaned_data)
-#             profile_cleaned = profile_form.cleaned_data
-#             user.profile.phone_number = profile_cleaned['phone_number']
-#             user.profile.address = profile_cleaned['address']
-#             user.save()
-#             return redirect(reverse_lazy('user_list'))
-#     else:
-#         form = UserCreationForm()
-#         profile_form = UserProfileForm()
-#     return render(request, 'profile_form.html', {
-#         'user_form': form,
-#         'profile_form': profile_form
-#     })
-#
-#
-# @login_required
-# def user_profile_update(request, pk):
-#     user_queryset = User.objects.filter(id=pk)
-#     if user_queryset:
-#         # TODO add permitions
-#         user_instance = user_queryset[0]
-#         if request.method == 'POST':
-#             profile_form = UserProfileForm(request.POST, instance=user_instance.profile)
-#             form = UserCreationForm(request.POST, instance=user_instance)
-#             if form.is_valid() and profile_form.is_valid():
-#                 user = form.save(commit=False)
-#                 profile_cleaned = profile_form.cleaned_data
-#                 user.profile.phone_number = profile_cleaned['phone_number']
-#                 user.profile.address = profile_cleaned['address']
-#                 user.save()
-#                 return redirect(reverse_lazy('user_list'))
-#         else:
-#             form = UserCreationForm(instance=user_instance.profile)
-#             profile_form = UserProfileForm(instance=user_instance)
-#         return render(request, 'profile_form.html', {
-#             'user_form': form,
-#             'profile_form': profile_form
-#         })
-#     return render(request, 'no_page.html')
 
 
 @login_required
@@ -202,6 +155,13 @@ class UserProfileUpdate(LoginRequiredMixin, UpdateView):
     template_name = 'profile/form.html'
     success_url = '/'
 
+    def get_initial(self):
+        res = super().get_initial()
+        user = self.get_object()
+        res['phone_number'] = user.profile.phone_number
+        res['address'] = user.profile.address
+        return res
+
     def form_valid(self, form):
         form.save()
         return redirect(self.get_success_url())
@@ -218,15 +178,59 @@ class AccountViewSet(viewsets.ModelViewSet):
     queryset = Account.objects.all()
     serializer_class = AccountSerializer
 
+    def get_queryset_by_username(self):
+        if "username" in self.request.query_params:
+            username = self.request.query_params.get("username", None)
+            user_queryset = User.objects.filter(username=username)
+            if user_queryset:
+                self.queryset = Account.objects.filter(user=user_queryset[0].id)
+            else:
+                return False
+        else:
+            self.queryset = Account.objects.filter(user=self.request.user.id)
+        return True
+
+    def list(self, request, *args, **kwargs):
+        if self.get_queryset_by_username():
+            return super().list(request, *args, **kwargs)
+        return HttpResponseNotFound('No user with this name')
+
+    def create(self, request, *args, **kwargs):
+        if self.get_queryset_by_username():
+            return super().list(request, *args, **kwargs)
+        return HttpResponseNotFound('No user with this name')
+
 
 class ChargeViewSet(viewsets.ModelViewSet):
     queryset = Charge.objects.all()
     serializer_class = ChargeSerializer
 
+    def list(self, request, *args, **kwargs):
+        if "account_number" in self.request.query_params:
+            account_queryset = Account.objects.filter(number=self.request.query_params.get("account_number", None))
+            if account_queryset:
+                self.queryset = Charge.objects.filter(account=account_queryset[0].id)
+                return super().list(request, *args, **kwargs)
+            return HttpResponseNotFound('No account with this number')
+
+        return HttpResponseNotAllowed('Only with number account here')
+
 
 class UserProfileViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def get_queryset(self):
+        if "username" in self.request.query_params:
+            return User.objects.filter(username=self.request.query_params.get("username", None))
+        else:
+            return User.objects.filter(username=self.request.user.username)
+
+    def create(self, request, *args, **kwargs):
+        return HttpResponseNotAllowed('Only GET here')
+
+    def destroy(self, request, *args, **kwargs):
+        return HttpResponseNotAllowed('Only GET here')
 
 
 class MonthStatCollection(LoginRequiredMixin, rest_views.APIView):
