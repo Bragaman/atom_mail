@@ -1,5 +1,6 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
+from finance.mixins import SuperUserRequiredMixin
 from django.http import HttpResponseNotAllowed
 from django.http import HttpResponseNotFound
 from django.shortcuts import render, redirect
@@ -14,9 +15,10 @@ from django.core.urlresolvers import reverse_lazy
 from finance.forms import *
 from django.contrib.auth.decorators import login_required
 from finance.serializers import *
+from django.core.exceptions import PermissionDenied
 
 
-@login_required
+# @login_required
 def home_page(request):
     return render(request, 'home_page.html')
 
@@ -47,12 +49,20 @@ class AccountList(LoginRequiredMixin, ListView):
     template_name = 'account/list.html'
 
     def get_queryset(self):
-        return Account.objects.filter(user=self.request.user)
+        user = self.request.user
+        return Account.objects.filter(user=user)
 
 
 class AccountDetail(LoginRequiredMixin, DetailView):
     model = Account
     template_name = 'account/detail.html'
+
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        user = self.request.user
+        if not user.is_superuser and obj.user != user:
+            raise PermissionDenied()
+        return obj
 
 
 class AccountCreate(LoginRequiredMixin, CreateView):
@@ -62,6 +72,9 @@ class AccountCreate(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         instance = form.save(commit=False)
+        # user = self.request.user
+        # if not user.is_superuser and instance.user != user:
+        #     raise PermissionDenied()
         instance.user = self.request.user
         instance.save()
         # TODO ask why so
@@ -72,19 +85,30 @@ class AccountUpdate(LoginRequiredMixin, UpdateView):
     model = Account
     fields = ['name', 'number']
     template_name = 'account/form.html'
-    success_url = '/'
+
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        user = self.request.user
+        if not user.is_superuser and obj.user != user:
+            raise PermissionDenied()
+        return obj
 
     def form_valid(self, form):
-        instance = form.save(commit=False)
-        instance.user = self.request.user
-        instance.save()
-        return redirect(self.get_success_url())
+        form.save()
+        return redirect(reverse_lazy('accounts_list'))
 
 
 class AccountDelete(LoginRequiredMixin, DeleteView):
     model = Account
     template_name = 'account/delete.html'
     success_url = '/'
+
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        user = self.request.user
+        if not user.is_superuser and obj.user != user:
+            raise PermissionDenied()
+        return obj
 
 
 # Charges
@@ -94,15 +118,16 @@ class ChargeCreate(LoginRequiredMixin, CreateView):
     template_name = 'charge/form.html'
 
     def form_valid(self, form):
-        account = Account.objects.filter(id=self.kwargs["account_id"],
-                                         user=self.request.user)
+        account = Account.objects.filter(id=self.kwargs["account_id"])
+        user = self.request.user
+        if not user.is_superuser and account[0].user != user:
+            raise PermissionDenied()
         if account:
             instance = form.save(commit=False)
             instance.account = account[0]
             instance.save()
             return redirect(reverse_lazy('accounts_detail', kwargs={'pk': account[0].id}))
-        # TODO go to error page
-        return redirect(reverse_lazy('accounts_detail', kwargs={'pk': account[0].id}))
+        raise PermissionDenied()
 
 
 class ChargeUpdate(LoginRequiredMixin, UpdateView):
@@ -111,15 +136,16 @@ class ChargeUpdate(LoginRequiredMixin, UpdateView):
     template_name = 'charge/form.html'
 
     def form_valid(self, form):
-        account = Account.objects.filter(id=self.kwargs["account_id"],
-                                         user=self.request.user)
+        account = Account.objects.filter(id=self.kwargs["account_id"])
+        user = self.request.user
+        if not user.is_superuser and account[0].user != user:
+            raise PermissionDenied()
         if account:
             instance = form.save(commit=False)
             instance.account = account[0]
             instance.save()
             return redirect(reverse_lazy('accounts_detail', kwargs={'pk': account[0].id}))
-        # TODO go to error page
-        return redirect(reverse_lazy('accounts_detail', kwargs={'pk': account[0].id}))
+        raise PermissionDenied()
 
 
 class ChargeDelete(LoginRequiredMixin, DeleteView):
@@ -127,19 +153,31 @@ class ChargeDelete(LoginRequiredMixin, DeleteView):
     template_name = 'charge/delete.html'
     success_url = '/'
 
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        user = self.request.user
+        if not user.is_superuser and obj.account.user != user:
+            raise PermissionDenied()
+        return obj
+
 
 # User profile
-class UserProfileList(LoginRequiredMixin, ListView):
+class UserProfileList(SuperUserRequiredMixin, ListView):
     template_name = 'profile/list.html'
     model = User
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_superuser:
+            return super().dispatch(request, *args, **kwargs)
+        return super().handle_no_permission()
 
-class UserProfileDetail(LoginRequiredMixin, DetailView):
+
+class UserProfileDetail(SuperUserRequiredMixin, DetailView):
     model = User
     template_name = 'profile/detail.html'
 
 
-class UserProfileCreate(LoginRequiredMixin, CreateView):
+class UserProfileCreate(SuperUserRequiredMixin, CreateView):
     model = User
     form_class = ProfileCreateForm
     template_name = 'profile/form.html'
@@ -149,7 +187,7 @@ class UserProfileCreate(LoginRequiredMixin, CreateView):
         return redirect(reverse_lazy('accounts_list'))
 
 
-class UserProfileUpdate(LoginRequiredMixin, UpdateView):
+class UserProfileUpdate(SuperUserRequiredMixin, UpdateView):
     model = User
     form_class = ProfileUpdateForm
     template_name = 'profile/form.html'
@@ -167,7 +205,7 @@ class UserProfileUpdate(LoginRequiredMixin, UpdateView):
         return redirect(self.get_success_url())
 
 
-class UserProfileDelete(LoginRequiredMixin, DeleteView):
+class UserProfileDelete(SuperUserRequiredMixin, DeleteView):
     model = User
     template_name = 'account/delete.html'
     success_url = '/'

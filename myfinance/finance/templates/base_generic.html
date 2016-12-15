@@ -21,8 +21,8 @@
     <div class="row">
         <div class="col-sm-2">
             <ul class="sidebar-nav">
-                {% if user.is_authenticated %}
-                    <li>User: {{ user.get_username }}</li>
+                {% if request.user.is_authenticated %}
+                    <li>User: {{ request.user.username }}</li>
                     {#                        <li><a href="{% url 'my-borrowed' %}">My Borrowed</a></li>#}
                     <li><a href="{% url 'logout' %}?next={{ request.path }}">Logout</a></li>
                 {% else %}
@@ -30,6 +30,11 @@
                     <li><a href="{% url 'register_user' %}">Register</a></li>
 
                 {% endif %}
+                {% if request.user.is_superuser %}
+                    <br>
+                    <li><a href="{% url 'user_list' %}">Users</a></li>
+                {% endif %}
+
                 {% block sidebar %}{% endblock %}
             </ul>
         </div>

@@ -5,5 +5,13 @@
 {% endblock %}
 
 {% block content %}
-
+    {% for account in object.accounts.all %}
+        <p>
+            {{ account.name }}
+            {{ account.number }}
+            <a href="{% url 'accounts_detail' account.pk %}">detail</a>
+            <a href="{% url 'accounts_update' account.pk %}">update</a>
+            <a href="{% url 'accounts_delete' account.pk %}">remove</a>
+        </p>
+    {% endfor %}
 {% endblock %}

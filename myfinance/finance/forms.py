@@ -80,7 +80,8 @@ class ProfileUpdateForm(forms.ModelForm):
                                    validators=[phone_regex, ])
 
     address = forms.CharField(max_length=500,
-                              widget=forms.Textarea)
+                              widget=forms.Textarea,
+                              required=False)
 
     class Meta:
         model = User
